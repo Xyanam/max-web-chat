@@ -31,8 +31,9 @@ export function isSameDay(a: number, b: number): boolean {
 }
 
 export function initials(title: string): string {
-  const words = title.replace(/[^\p{L}\p{N}\s]/gu, ' ').trim().split(/\s+/).filter(Boolean)
-  if (!words.length) return '#'
+  // Letters only: phone-number titles get a generic icon instead of digits.
+  const words = title.replace(/[^\p{L}\s]/gu, ' ').trim().split(/\s+/).filter(Boolean)
+  if (!words.length) return ''
   if (words.length === 1) return words[0].slice(0, 2).toUpperCase()
   return (words[0][0] + words[1][0]).toUpperCase()
 }

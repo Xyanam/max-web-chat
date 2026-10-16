@@ -115,8 +115,13 @@ export function Sidebar({
                   </span>
                   <span className="chat-item-bottom">
                     <span className={`chat-item-preview${last?.status === 'failed' ? ' is-failed' : ''}`}>
-                      {last?.status === 'failed' ? 'Not sent: ' : ''}
-                      {last ? preview(last) : chat.phone ? formatPhone(chat.phone) : preview(undefined)}
+                      {last?.status === 'failed'
+                        ? `Not sent: ${last.text.replace(/\s+/g, ' ')}`
+                        : last
+                          ? preview(last)
+                          : chat.phone
+                            ? formatPhone(chat.phone)
+                            : preview(undefined)}
                     </span>
                     {chat.unread > 0 && (
                       <span className="badge" aria-label={`${chat.unread} unread`}>

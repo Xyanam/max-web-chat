@@ -27,6 +27,8 @@ export function Composer({ onSend, disabled, autoFocusKey }: ComposerProps) {
     if (!el) return
     el.style.height = 'auto'
     el.style.height = `${el.scrollHeight}px`
+    // Show a scrollbar only once the CSS max-height is reached.
+    el.style.overflowY = el.scrollHeight > el.clientHeight ? 'auto' : 'hidden'
   }, [text])
 
   const trimmed = text.trim()
