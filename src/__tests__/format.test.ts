@@ -18,8 +18,8 @@ describe('api url helpers', () => {
 
   it('validates the API URL', () => {
     expect(validateApiUrl('https://3100.api.green-api.com/v3/')).toBeNull()
-    expect(validateApiUrl('http://3100.api.green-api.com')).toMatch(/https/)
-    expect(validateApiUrl('not a url')).toMatch(/valid/)
-    expect(validateApiUrl('')).toMatch(/Enter/)
+    expect(validateApiUrl('http://3100.api.green-api.com')).toMatch(/https:\/\//)
+    expect(validateApiUrl('not a url')).toMatch(/Некорректный/)
+    expect(validateApiUrl('')).toMatch(/Укажите/)
   })
 })

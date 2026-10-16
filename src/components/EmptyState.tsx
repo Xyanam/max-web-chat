@@ -6,10 +6,10 @@ export function EmptyState({ onNewChat }: { onNewChat: () => void }) {
       <div className="empty-state-icon">
         <ChatBubbleIcon width={36} height={36} />
       </div>
-      <h2>Select a chat</h2>
-      <p>Choose a conversation on the left or start a new one by phone number.</p>
+      <h2>Выберите чат</h2>
+      <p>Выберите переписку слева или начните новую по номеру телефона.</p>
       <button type="button" className="button button-primary" onClick={onNewChat}>
-        New chat
+        Новый чат
       </button>
     </section>
   )

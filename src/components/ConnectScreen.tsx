@@ -14,16 +14,16 @@ export function ConnectScreen({ initial, initialRemember, onConnect }: ConnectSc
       <div className="connect-card">
         <div className="connect-brand">
           <Logo size={56} />
-          <h1>MAX Web Chat</h1>
-          <p>Connect your GREEN-API instance for MAX to send and receive messages.</p>
+          <h1>Веб-чат MAX</h1>
+          <p>Подключите инстанс GREEN-API для MAX, чтобы отправлять и получать сообщения.</p>
         </div>
-        <ConnectForm initial={initial} initialRemember={initialRemember} submitLabel="Connect" onSubmit={onConnect} />
+        <ConnectForm initial={initial} initialRemember={initialRemember} submitLabel="Подключиться" onSubmit={onConnect} />
         <p className="connect-footnote">
-          Find <code>idInstance</code>, <code>apiTokenInstance</code> and the API URL in the{' '}
+          <code>idInstance</code>, <code>apiTokenInstance</code> и адрес API указаны в{' '}
           <a href="https://console.green-api.com/" target="_blank" rel="noreferrer">
-            GREEN-API console
+            консоли GREEN-API
           </a>
-          . Credentials are sent only to GREEN-API.
+          . Данные для входа передаются только в GREEN-API.
         </p>
       </div>
     </main>

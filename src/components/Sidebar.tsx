@@ -20,16 +20,16 @@ interface SidebarProps {
 }
 
 function preview(message: ChatMessage | undefined): string {
-  if (!message) return 'No messages yet'
-  const prefix = message.direction === 'outgoing' ? 'You: ' : ''
-  if (message.kind === 'unsupported') return `${prefix}Unsupported message`
+  if (!message) return 'Сообщений пока нет'
+  const prefix = message.direction === 'outgoing' ? 'Вы: ' : ''
+  if (message.kind === 'unsupported') return `${prefix}Неподдерживаемое сообщение`
   return prefix + message.text.replace(/\s+/g, ' ')
 }
 
 const statusLabel: Record<ConnectionStatus, string> = {
-  connecting: 'Connecting…',
-  online: 'Connected',
-  error: 'Connection problem',
+  connecting: 'Подключение…',
+  online: 'Подключено',
+  error: 'Проблема с подключением',
 }
 
 export function Sidebar({
@@ -51,19 +51,19 @@ export function Sidebar({
     : chats
 
   return (
-    <aside className="sidebar" aria-label="Chats">
+    <aside className="sidebar" aria-label="Чаты">
       <header className="sidebar-header">
-        <h1>Chats</h1>
+        <h1>Чаты</h1>
         <div className="sidebar-actions">
-          <button type="button" className="icon-button" onClick={onNewChat} aria-label="New chat" title="New chat">
+          <button type="button" className="icon-button" onClick={onNewChat} aria-label="Новый чат" title="Новый чат">
             <EditIcon width={20} height={20} />
           </button>
           <button
             type="button"
             className="icon-button"
             onClick={onOpenSettings}
-            aria-label="Connection settings"
-            title="Connection settings"
+            aria-label="Настройки подключения"
+            title="Настройки подключения"
           >
             <SettingsIcon width={20} height={20} />
           </button>
@@ -74,8 +74,8 @@ export function Sidebar({
         <SearchIcon width={18} height={18} />
         <input
           type="search"
-          placeholder="Search"
-          aria-label="Search chats"
+          placeholder="Поиск"
+          aria-label="Поиск по чатам"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />
@@ -86,13 +86,13 @@ export function Sidebar({
           <div className="chat-list-empty">
             {chats.length === 0 ? (
               <>
-                <p>No chats yet.</p>
+                <p>Чатов пока нет.</p>
                 <button type="button" className="button button-primary" onClick={onNewChat}>
-                  Start a new chat
+                  Начать новый чат
                 </button>
               </>
             ) : (
-              <p>Nothing found.</p>
+              <p>Ничего не найдено.</p>
             )}
           </div>
         )}
@@ -116,7 +116,7 @@ export function Sidebar({
                   <span className="chat-item-bottom">
                     <span className={`chat-item-preview${last?.status === 'failed' ? ' is-failed' : ''}`}>
                       {last?.status === 'failed'
-                        ? `Not sent: ${last.text.replace(/\s+/g, ' ')}`
+                        ? `Не отправлено: ${last.text.replace(/\s+/g, ' ')}`
                         : last
                           ? preview(last)
                           : chat.phone
@@ -124,7 +124,7 @@ export function Sidebar({
                             : preview(undefined)}
                     </span>
                     {chat.unread > 0 && (
-                      <span className="badge" aria-label={`${chat.unread} unread`}>
+                      <span className="badge" aria-label={`Непрочитанных: ${chat.unread}`}>
                         {chat.unread > 99 ? '99+' : chat.unread}
                       </span>
                     )}
@@ -141,7 +141,7 @@ export function Sidebar({
         <span className="sidebar-footer-text">
           <span>{statusLabel[connectionStatus]}</span>
           <span className="muted" title={connectionMessage}>
-            {connectionMessage ?? `Instance ${idInstance}`}
+            {connectionMessage ?? `Инстанс ${idInstance}`}
           </span>
         </span>
       </footer>

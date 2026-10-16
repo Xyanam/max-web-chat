@@ -69,8 +69,8 @@ export function Composer({ onSend, disabled, autoFocusKey }: ComposerProps) {
           ref={textareaRef}
           rows={1}
           value={text}
-          placeholder="Message"
-          aria-label="Message"
+          placeholder="Сообщение"
+          aria-label="Сообщение"
           onChange={(e) => setText(e.target.value)}
           onKeyDown={handleKeyDown}
           disabled={disabled}
@@ -81,7 +81,7 @@ export function Composer({ onSend, disabled, autoFocusKey }: ComposerProps) {
           </span>
         )}
       </div>
-      <button type="submit" className="send-button" disabled={!canSend} aria-label={sending ? 'Sending' : 'Send'}>
+      <button type="submit" className="send-button" disabled={!canSend} aria-label={sending ? 'Отправка' : 'Отправить'}>
         {sending ? <span className="spinner spinner-light" aria-hidden="true" /> : <SendIcon width={20} height={20} />}
       </button>
     </form>

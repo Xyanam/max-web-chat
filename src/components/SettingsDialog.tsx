@@ -1,6 +1,7 @@
 import type { Credentials, InstanceState } from '../types'
 import { ConnectForm } from './ConnectForm'
 import { Modal } from './Modal'
+import { instanceStateLabel } from '../lib/instanceState'
 
 interface SettingsDialogProps {
   credentials: Credentials
@@ -20,21 +21,21 @@ export function SettingsDialog({
   onDisconnect,
 }: SettingsDialogProps) {
   return (
-    <Modal title="Connection settings" onClose={onClose}>
+    <Modal title="Настройки подключения" onClose={onClose}>
       <dl className="settings-summary">
         <div>
-          <dt>Instance</dt>
+          <dt>Инстанс</dt>
           <dd>{credentials.idInstance}</dd>
         </div>
         <div>
-          <dt>State</dt>
-          <dd>{instanceState ?? 'unknown'}</dd>
+          <dt>Состояние</dt>
+          <dd>{instanceStateLabel(instanceState)}</dd>
         </div>
       </dl>
-      <ConnectForm initial={credentials} initialRemember={remember} submitLabel="Save and reconnect" onSubmit={onSave} />
+      <ConnectForm initial={credentials} initialRemember={remember} submitLabel="Сохранить и переподключиться" onSubmit={onSave} />
       <hr className="divider" />
       <button type="button" className="button button-danger button-block" onClick={onDisconnect}>
-        Disconnect and forget credentials
+        Отключиться и забыть данные
       </button>
     </Modal>
   )

@@ -69,9 +69,9 @@ const OUTGOING_STATUS: Record<string, MessageStatus> = {
 }
 
 const STATUS_DESCRIPTIONS: Record<string, string> = {
-  failed: 'MAX could not deliver the message.',
-  noAccount: 'The recipient has no MAX account.',
-  notInGroup: 'You are not a member of this group.',
+  failed: 'MAX не смог доставить сообщение.',
+  noAccount: 'У получателя нет аккаунта MAX.',
+  notInGroup: 'Вы не состоите в этой группе.',
 }
 
 function isGroupChat(chatId: string, senderData: Json): boolean {

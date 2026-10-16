@@ -12,11 +12,11 @@ export type PhoneResult =
  */
 export function normalizePhone(input: string): PhoneResult {
   const trimmed = input.trim()
-  if (!trimmed) return { ok: false, error: 'Enter a phone number.' }
+  if (!trimmed) return { ok: false, error: 'Введите номер телефона.' }
 
   const stripped = trimmed.replace(/[\s\-().]/g, '').replace(/^\+/, '')
   if (!/^\d+$/.test(stripped)) {
-    return { ok: false, error: 'Phone number may contain only digits, spaces, "+", "-" and brackets.' }
+    return { ok: false, error: 'Номер может содержать только цифры, пробелы, «+», «-» и скобки.' }
   }
 
   let digits = stripped
@@ -31,9 +31,9 @@ export function normalizePhone(input: string): PhoneResult {
     return { ok: true, digits, formatted: formatPhone(digits) }
   }
   if (digits.length < 11 || digits.length > 12) {
-    return { ok: false, error: 'Phone number must have 11 or 12 digits in international format, e.g. +7 999 123-45-67.' }
+    return { ok: false, error: 'Номер должен содержать 11 или 12 цифр в международном формате, например +7 (999) 123-45-67.' }
   }
-  return { ok: false, error: 'MAX supports only Russian (+7) and Belarusian (+375) phone numbers.' }
+  return { ok: false, error: 'MAX поддерживает только российские (+7) и белорусские (+375) номера.' }
 }
 
 export function formatPhone(digits: string): string {

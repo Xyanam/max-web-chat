@@ -14,11 +14,11 @@ describe('normalizePhone', () => {
   })
 
   it.each([
-    ['', /Enter a phone number/],
-    ['abc', /only digits/],
-    ['+7 999', /11 or 12 digits/],
-    ['+1 202 555 0143 1', /Russian \(\+7\) and Belarusian/],
-    ['+380 44 123 45 67', /Russian \(\+7\) and Belarusian/],
+    ['', /Введите номер/],
+    ['abc', /только цифры/],
+    ['+7 999', /11 или 12 цифр/],
+    ['+1 202 555 0143 1', /российские \(\+7\) и белорусские/],
+    ['+380 44 123 45 67', /российские \(\+7\) и белорусские/],
   ])('rejects %j', (input, error) => {
     const result = normalizePhone(input)
     expect(result.ok).toBe(false)

@@ -45,12 +45,12 @@ export function ChatView({ chat, messages, onBack, onSend, onRetry }: ChatViewPr
     nearBottomRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < NEAR_BOTTOM_PX
   }
 
-  const subtitle = chat.phone ? formatPhone(chat.phone) : `MAX ID ${chat.chatId}`
+  const subtitle = chat.phone ? formatPhone(chat.phone) : `ID в MAX: ${chat.chatId}`
 
   return (
-    <section className="chat-view" aria-label={`Chat with ${chat.title}`}>
+    <section className="chat-view" aria-label={`Чат: ${chat.title}`}>
       <header className="chat-header">
-        <button type="button" className="icon-button chat-back" onClick={onBack} aria-label="Back to chats">
+        <button type="button" className="icon-button chat-back" onClick={onBack} aria-label="Назад к чатам">
           <BackIcon width={22} height={22} />
         </button>
         <Avatar title={chat.title} seed={chat.chatId} size={40} />
@@ -63,8 +63,8 @@ export function ChatView({ chat, messages, onBack, onSend, onRetry }: ChatViewPr
       <div className="messages" ref={scrollRef} onScroll={handleScroll} role="log" aria-live="polite">
         {messages.length === 0 ? (
           <div className="messages-empty">
-            <p>No messages yet.</p>
-            <p className="muted">Write the first message below.</p>
+            <p>Сообщений пока нет.</p>
+            <p className="muted">Напишите первое сообщение ниже.</p>
           </div>
         ) : (
           messages.map((m, i) => {

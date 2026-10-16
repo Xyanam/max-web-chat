@@ -76,7 +76,7 @@ export function loadChatState(idInstance: string): ChatState {
         for (const m of list) {
           if (m.status === 'sending') {
             m.status = 'failed'
-            m.error = 'Interrupted before the server confirmed the message.'
+            m.error = 'Отправка прервана до подтверждения сервером.'
           }
         }
       }

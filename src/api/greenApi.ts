@@ -52,34 +52,46 @@ interface RequestOptions {
 }
 
 function describeHttpError(status: number, detail: string): GreenApiError {
+  // Raw API details are only used to pick a message — they are never shown to the user.
   if (status === 401 || status === 403) {
     if (/suspend/i.test(detail)) {
-      return new GreenApiError('api', 'Your MAX account is suspended: you can only message contacts who saved your number.', status)
+      return new GreenApiError(
+        'api',
+        'Аккаунт MAX временно ограничен: писать можно только контактам, которые сохранили ваш номер.',
+        status,
+      )
     }
-    return new GreenApiError('auth', 'Access denied. Check idInstance and apiTokenInstance.', status)
+    return new GreenApiError('auth', 'Доступ запрещён. Проверьте idInstance и apiTokenInstance.', status)
   }
   if (status === 466) {
-    return new GreenApiError('api', 'The request quota of your GREEN-API plan is exhausted.', status)
+    return new GreenApiError('api', 'Исчерпан лимит запросов вашего тарифа GREEN-API.', status)
   }
   if (status === 429 || status === 469) {
-    return new GreenApiError('rateLimit', 'Too many requests. Please wait a little and try again.', status)
+    return new GreenApiError('rateLimit', 'Слишком много запросов. Подождите немного и попробуйте снова.', status)
   }
   if (status === 404) {
-    return new GreenApiError('http', 'API method not found. Check the API URL.', status)
+    return new GreenApiError('http', 'Метод API не найден. Проверьте адрес API.', status)
   }
   if (status === 400 && /webhook/i.test(detail)) {
     return new GreenApiError(
       'api',
-      'A webhook URL is set for this instance. Clear "webhookUrl" in the GREEN-API console to receive messages via HTTP API.',
+      'Для инстанса задан адрес вебхука. Очистите поле webhookUrl в консоли GREEN-API, чтобы получать сообщения через HTTP API.',
       status,
     )
   }
-  const shortDetail = detail.replace(/\s+/g, ' ').trim().slice(0, 200)
-  return new GreenApiError(
-    'http',
-    shortDetail ? `GREEN-API error ${status}: ${shortDetail}` : `GREEN-API error ${status}.`,
-    status,
-  )
+  if (status === 400 && /4000|length/i.test(detail)) {
+    return new GreenApiError('api', 'Сообщение слишком длинное: максимум 4000 символов.', status)
+  }
+  if (status === 400) {
+    return new GreenApiError('http', 'GREEN-API отклонил запрос. Проверьте введённые данные.', status)
+  }
+  if (status === 413 || /too large/i.test(detail)) {
+    return new GreenApiError('http', 'Запрос слишком большой.', status)
+  }
+  if (status >= 500) {
+    return new GreenApiError('http', 'Сервер GREEN-API временно недоступен. Попробуйте позже.', status)
+  }
+  return new GreenApiError('http', `Ошибка GREEN-API (код ${status}). Попробуйте позже.`, status)
 }
 
 /** Extracts a human-readable message from a GREEN-API error body (JSON or text). */
@@ -135,16 +147,16 @@ export class GreenApiClient {
         signal: options.signal,
       })
     } catch (err) {
-      if (options.signal?.aborted || isAbortError(err)) throw new GreenApiError('aborted', 'Request cancelled.')
-      throw new GreenApiError('network', 'Network error: GREEN-API is unreachable. Check the API URL and your connection.')
+      if (options.signal?.aborted || isAbortError(err)) throw new GreenApiError('aborted', 'Запрос отменён.')
+      throw new GreenApiError('network', 'Нет связи с GREEN-API. Проверьте адрес API и подключение к интернету.')
     }
 
     let text: string
     try {
       text = await response.text()
     } catch (err) {
-      if (options.signal?.aborted || isAbortError(err)) throw new GreenApiError('aborted', 'Request cancelled.')
-      throw new GreenApiError('network', 'Network error while reading the GREEN-API response.')
+      if (options.signal?.aborted || isAbortError(err)) throw new GreenApiError('aborted', 'Запрос отменён.')
+      throw new GreenApiError('network', 'Сетевая ошибка при получении ответа GREEN-API.')
     }
 
     if (!response.ok) throw describeHttpError(response.status, errorDetail(text))
@@ -154,7 +166,7 @@ export class GreenApiClient {
     try {
       return JSON.parse(trimmed) as T
     } catch {
-      throw new GreenApiError('api', 'GREEN-API returned an unexpected response.')
+      throw new GreenApiError('api', 'GREEN-API вернул неожиданный ответ.')
     }
   }
 
@@ -162,7 +174,7 @@ export class GreenApiClient {
   async getStateInstance(signal?: AbortSignal): Promise<InstanceState> {
     const res = await this.request<{ stateInstance?: string }>('getStateInstance', { method: 'GET', signal })
     if (!res || typeof res.stateInstance !== 'string') {
-      throw new GreenApiError('api', 'GREEN-API returned an unexpected response.')
+      throw new GreenApiError('api', 'GREEN-API вернул неожиданный ответ.')
     }
     return res.stateInstance
   }
@@ -176,15 +188,15 @@ export class GreenApiClient {
       'checkAccount',
       { method: 'POST', body: { phoneNumber: Number(phoneDigits) }, signal },
     )
-    if (!res) throw new GreenApiError('api', 'GREEN-API returned an empty response.')
+    if (!res) throw new GreenApiError('api', 'GREEN-API вернул пустой ответ.')
     if (res.status === false) {
       if (res.reason && /limit/i.test(res.reason)) {
-        throw new GreenApiError('rateLimit', 'MAX limited phone number checks. Pause new chats for a while and try later.')
+        throw new GreenApiError('rateLimit', 'MAX ограничил проверку номеров. Сделайте паузу и попробуйте позже.')
       }
       if (res.reason && /not authorized|starting/i.test(res.reason)) {
-        throw new GreenApiError('api', 'The instance is starting or not authorized in MAX. Check it in the GREEN-API console.')
+        throw new GreenApiError('api', 'Инстанс запускается или не авторизован в MAX. Проверьте его в консоли GREEN-API.')
       }
-      throw new GreenApiError('api', res.reason ? `Could not check the number: ${res.reason}` : 'Could not check the number.')
+      throw new GreenApiError('api', 'Не удалось проверить номер. Попробуйте позже.')
     }
     return { exist: res.exist === true, chatId: typeof res.chatId === 'string' ? res.chatId : '' }
   }
@@ -197,7 +209,7 @@ export class GreenApiClient {
       signal,
     })
     if (!res || typeof res.idMessage !== 'string' || !res.idMessage) {
-      throw new GreenApiError('api', 'GREEN-API did not return a message ID.')
+      throw new GreenApiError('api', 'GREEN-API не вернул идентификатор сообщения.')
     }
     return { idMessage: res.idMessage }
   }

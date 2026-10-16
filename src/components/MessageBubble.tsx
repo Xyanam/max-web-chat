@@ -3,28 +3,28 @@ import { formatTime } from '../lib/format'
 import { AlertIcon, CheckIcon, ClockIcon, DoubleCheckIcon } from './Icons'
 
 const UNSUPPORTED_LABELS: Record<string, string> = {
-  imageMessage: 'Photo',
-  videoMessage: 'Video',
-  audioMessage: 'Voice or audio message',
-  documentMessage: 'File',
-  stickerMessage: 'Sticker',
-  locationMessage: 'Location',
-  contactMessage: 'Contact',
-  pollMessage: 'Poll',
+  imageMessage: 'Фото',
+  videoMessage: 'Видео',
+  audioMessage: 'Голосовое или аудиосообщение',
+  documentMessage: 'Файл',
+  stickerMessage: 'Стикер',
+  locationMessage: 'Геопозиция',
+  contactMessage: 'Контакт',
+  pollMessage: 'Опрос',
 }
 
 function StatusIcon({ message }: { message: ChatMessage }) {
   switch (message.status) {
     case 'sending':
-      return <ClockIcon className="msg-status" width={14} height={14} aria-label="Sending" role="img" />
+      return <ClockIcon className="msg-status" width={14} height={14} aria-label="Отправляется" role="img" />
     case 'sent':
-      return <CheckIcon className="msg-status" width={14} height={14} aria-label="Sent" role="img" />
+      return <CheckIcon className="msg-status" width={14} height={14} aria-label="Отправлено" role="img" />
     case 'delivered':
-      return <DoubleCheckIcon className="msg-status" width={16} height={14} aria-label="Delivered" role="img" />
+      return <DoubleCheckIcon className="msg-status" width={16} height={14} aria-label="Доставлено" role="img" />
     case 'read':
-      return <DoubleCheckIcon className="msg-status is-read" width={16} height={14} aria-label="Read" role="img" />
+      return <DoubleCheckIcon className="msg-status is-read" width={16} height={14} aria-label="Прочитано" role="img" />
     case 'failed':
-      return <AlertIcon className="msg-status is-failed" width={14} height={14} aria-label="Not sent" role="img" />
+      return <AlertIcon className="msg-status is-failed" width={14} height={14} aria-label="Не отправлено" role="img" />
     default:
       return null
   }
@@ -44,7 +44,7 @@ export function MessageBubble({ message, onRetry }: MessageBubbleProps) {
       <div className={`msg-bubble${failed ? ' is-failed' : ''}${message.kind === 'unsupported' ? ' is-unsupported' : ''}`}>
         {message.kind === 'unsupported' ? (
           <p className="msg-text msg-unsupported">
-            {UNSUPPORTED_LABELS[message.messageType ?? ''] ?? 'Message'} — not supported in this web chat
+            {UNSUPPORTED_LABELS[message.messageType ?? ''] ?? 'Сообщение'} — не поддерживается в веб-чате
           </p>
         ) : (
           <p className="msg-text">{message.text}</p>
@@ -56,10 +56,10 @@ export function MessageBubble({ message, onRetry }: MessageBubbleProps) {
       </div>
       {failed && (
         <div className="msg-failed">
-          <span>{message.error ?? 'Message was not sent.'}</span>
+          <span>{message.error ?? 'Сообщение не отправлено.'}</span>
           {onRetry && message.kind === 'text' && (
             <button type="button" className="link-button" onClick={() => onRetry(message)}>
-              Retry
+              Повторить
             </button>
           )}
         </div>

@@ -1,7 +1,9 @@
-const timeFmt = new Intl.DateTimeFormat(undefined, { hour: '2-digit', minute: '2-digit' })
-const dayFmt = new Intl.DateTimeFormat(undefined, { day: 'numeric', month: 'long' })
-const dayYearFmt = new Intl.DateTimeFormat(undefined, { day: 'numeric', month: 'long', year: 'numeric' })
-const shortDateFmt = new Intl.DateTimeFormat(undefined, { day: '2-digit', month: '2-digit', year: '2-digit' })
+const LOCALE = 'ru-RU'
+
+const timeFmt = new Intl.DateTimeFormat(LOCALE, { hour: '2-digit', minute: '2-digit' })
+const dayFmt = new Intl.DateTimeFormat(LOCALE, { day: 'numeric', month: 'long' })
+const dayYearFmt = new Intl.DateTimeFormat(LOCALE, { day: 'numeric', month: 'long', year: 'numeric' })
+const shortDateFmt = new Intl.DateTimeFormat(LOCALE, { day: '2-digit', month: '2-digit', year: '2-digit' })
 
 function startOfDay(ts: number) {
   const d = new Date(ts)
@@ -21,8 +23,8 @@ export function formatListTime(ts: number, now = Date.now()): string {
 export function formatDaySeparator(ts: number, now = Date.now()): string {
   const day = startOfDay(ts)
   const today = startOfDay(now)
-  if (day === today) return 'Today'
-  if (day === today - 86_400_000) return 'Yesterday'
+  if (day === today) return 'Сегодня'
+  if (day === today - 86_400_000) return 'Вчера'
   return new Date(ts).getFullYear() === new Date(now).getFullYear() ? dayFmt.format(ts) : dayYearFmt.format(ts)
 }
 

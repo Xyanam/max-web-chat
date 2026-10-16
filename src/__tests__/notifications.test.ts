@@ -73,7 +73,7 @@ describe('parseNotification', () => {
     expect(parseNotification({ ...base, status: 'noAccount' })).toMatchObject({
       type: 'status',
       status: 'failed',
-      description: 'The recipient has no MAX account.',
+      description: 'У получателя нет аккаунта MAX.',
     })
     expect(parseNotification({ ...base, status: 'weird' }).type).toBe('ignored')
   })

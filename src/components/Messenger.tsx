@@ -7,6 +7,7 @@ import { useChatStore } from '../hooks/useChatStore'
 import { lastMessage, sortedChats } from '../state/chatReducer'
 import { formatPhone } from '../lib/phone'
 import { localId } from '../lib/id'
+import { instanceStateHint, instanceStateLabel } from '../lib/instanceState'
 import { ChatView } from './ChatView'
 import { EmptyState } from './EmptyState'
 import { NewChatDialog } from './NewChatDialog'
@@ -22,14 +23,6 @@ interface MessengerProps {
 }
 
 const STATE_CHECK_INTERVAL_MS = 60_000
-
-const instanceStateHints: Record<string, string> = {
-  notAuthorized: 'The instance is not authorized in MAX. Link your MAX account in the GREEN-API console.',
-  blocked: 'The MAX account of this instance is blocked.',
-  starting: 'The instance is starting. This can take up to 5 minutes.',
-  suspended: 'The MAX account is suspended: messages can be sent only to contacts who saved your number.',
-  pendingPassword: 'MAX requires the two-factor password. Finish authorization in the GREEN-API console.',
-}
 
 function errorMessage(err: unknown, fallback: string): string {
   return err instanceof GreenApiError ? err.message : fallback
@@ -105,7 +98,7 @@ export function Messenger({
         setInstanceState(await client.getStateInstance(controller.signal))
         setStateError(null)
       } catch (err) {
-        if (!isAbortError(err)) setStateError(errorMessage(err, 'Could not reach GREEN-API.'))
+        if (!isAbortError(err)) setStateError(errorMessage(err, 'Нет связи с GREEN-API.'))
       }
     }
     if (!initialInstanceState) void check()
@@ -118,12 +111,12 @@ export function Messenger({
 
   const pollError =
     pollStatus?.state === 'error'
-      ? `Receiving failed: ${errorMessage(pollStatus.error, 'unknown error')} Retrying in ${Math.round(pollStatus.retryInMs / 1000)} s.`
+      ? `Не удалось получить сообщения: ${errorMessage(pollStatus.error, 'неизвестная ошибка.')} Повтор через ${Math.round(pollStatus.retryInMs / 1000)} с.`
       : null
   const connectionStatus: ConnectionStatus =
     stateError || pollError ? 'error' : instanceState && pollStatus?.state === 'ok' ? 'online' : 'connecting'
   const connectionMessage =
-    pollError ?? stateError ?? (instanceState ? `Instance ${credentials.idInstance} · ${instanceState}` : undefined)
+    pollError ?? stateError ?? (instanceState ? `Инстанс ${credentials.idInstance} · ${instanceStateLabel(instanceState)}` : undefined)
 
   const chats = useMemo(() => sortedChats(state), [state])
   const lastMessages = useMemo(
@@ -147,10 +140,10 @@ export function Messenger({
     try {
       result = await client.checkAccount(phone)
     } catch (err) {
-      throw new Error(errorMessage(err, 'Could not check the phone number.'))
+      throw new Error(errorMessage(err, 'Не удалось проверить номер телефона.'))
     }
     if (!result.exist || !result.chatId) {
-      throw new Error(`${formatPhone(phone)} is not registered in MAX.`)
+      throw new Error(`Номер ${formatPhone(phone)} не зарегистрирован в MAX.`)
     }
     dispatch({ type: 'openChat', chatId: result.chatId, meta: { title: formatPhone(phone), phone } })
     setActiveChatId(result.chatId)
@@ -176,7 +169,7 @@ export function Messenger({
         type: 'updateMessage',
         chatId,
         id,
-        patch: { status: 'failed', error: errorMessage(err, 'Message was not sent.') },
+        patch: { status: 'failed', error: errorMessage(err, 'Сообщение не отправлено.') },
       })
     }
   }
@@ -191,7 +184,6 @@ export function Messenger({
     void sendText(message.chatId, message.text, current)
   }
 
-  const stateHint = instanceState && instanceState !== 'authorized' ? instanceStateHints[instanceState] : undefined
 
   return (
     <div className={`layout${activeChat ? ' has-active-chat' : ''}`}>
@@ -209,7 +201,7 @@ export function Messenger({
       <main className="main">
         {instanceState && instanceState !== 'authorized' && (
           <div className="banner" role="status">
-            {stateHint ?? `Instance state: ${instanceState}`}
+            {instanceStateHint(instanceState)}
           </div>
         )}
         {activeChat ? (

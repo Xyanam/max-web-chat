@@ -90,8 +90,15 @@ describe('GreenApiClient', () => {
     await expect(client.receiveNotification(5)).rejects.toThrow(/webhookUrl/)
   })
 
+  it('shows a friendly Russian message instead of raw API details', async () => {
+    const client = new GreenApiClient(creds, mockFetch(500, '{"message":"Internal error","stack":"..."}'))
+    const err = (await client.sendMessage('1', 'x').catch((e: unknown) => e)) as Error
+    expect(err.message).toBe('Сервер GREEN-API временно недоступен. Попробуйте позже.')
+    expect(err.message).not.toMatch(/Internal|\{/)
+  })
+
   it('maps suspended account 403', async () => {
     const client = new GreenApiClient(creds, mockFetch(403, 'Your account is suspended'))
-    await expect(client.sendMessage('1', 'x')).rejects.toThrow(/suspended/)
+    await expect(client.sendMessage('1', 'x')).rejects.toThrow(/временно ограничен/)
   })
 })

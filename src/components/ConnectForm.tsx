@@ -29,9 +29,9 @@ export function ConnectForm({ initial, initialRemember = false, submitLabel, onS
   const validate = (): FieldErrors => {
     const next: FieldErrors = {}
     const id = idInstance.trim()
-    if (!id) next.idInstance = 'idInstance is required.'
-    else if (!/^\d+$/.test(id)) next.idInstance = 'idInstance must contain digits only.'
-    if (!apiTokenInstance.trim()) next.apiTokenInstance = 'apiTokenInstance is required.'
+    if (!id) next.idInstance = 'Укажите idInstance.'
+    else if (!/^\d+$/.test(id)) next.idInstance = 'idInstance должен состоять только из цифр.'
+    if (!apiTokenInstance.trim()) next.apiTokenInstance = 'Укажите apiTokenInstance.'
     const urlError = validateApiUrl(effectiveApiUrl)
     if (urlError) next.apiUrl = urlError
     return next
@@ -56,7 +56,7 @@ export function ConnectForm({ initial, initialRemember = false, submitLabel, onS
         remember,
       )
     } catch (err) {
-      setSubmitError(err instanceof Error ? err.message : 'Could not connect.')
+      setSubmitError(err instanceof Error ? err.message : 'Не удалось подключиться.')
     } finally {
       setBusy(false)
     }
@@ -92,7 +92,7 @@ export function ConnectForm({ initial, initialRemember = false, submitLabel, onS
             type={showToken ? 'text' : 'password'}
             autoComplete="off"
             spellCheck={false}
-            placeholder="Token from the GREEN-API console"
+            placeholder="Токен из консоли GREEN-API"
             value={apiTokenInstance}
             onChange={(e) => setApiTokenInstance(e.target.value)}
             aria-invalid={Boolean(errors.apiTokenInstance)}
@@ -103,7 +103,7 @@ export function ConnectForm({ initial, initialRemember = false, submitLabel, onS
             type="button"
             className="icon-button"
             onClick={() => setShowToken((v) => !v)}
-            aria-label={showToken ? 'Hide token' : 'Show token'}
+            aria-label={showToken ? 'Скрыть токен' : 'Показать токен'}
             aria-pressed={showToken}
           >
             {showToken ? <EyeOffIcon width={18} height={18} /> : <EyeIcon width={18} height={18} />}
@@ -117,7 +117,7 @@ export function ConnectForm({ initial, initialRemember = false, submitLabel, onS
       </div>
 
       <div className="field">
-        <label htmlFor="apiUrl">API URL</label>
+        <label htmlFor="apiUrl">Адрес API (apiUrl)</label>
         <input
           id="apiUrl"
           type="url"
@@ -139,14 +139,14 @@ export function ConnectForm({ initial, initialRemember = false, submitLabel, onS
           </p>
         ) : (
           <p className="field-hint" id="apiUrl-hint">
-            Filled in from idInstance. Replace it with the apiUrl shown in your GREEN-API console if it differs.
+            Заполняется по idInstance. Если в консоли GREEN-API указан другой apiUrl, вставьте его.
           </p>
         )}
       </div>
 
       <label className="checkbox">
         <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} disabled={busy} />
-        <span>Remember on this device</span>
+        <span>Запомнить на этом устройстве</span>
       </label>
 
       {submitError && (
@@ -158,7 +158,7 @@ export function ConnectForm({ initial, initialRemember = false, submitLabel, onS
       <button type="submit" className="button button-primary button-block" disabled={busy}>
         {busy ? (
           <>
-            <span className="spinner" aria-hidden="true" /> Connecting…
+            <span className="spinner" aria-hidden="true" /> Подключение…
           </>
         ) : (
           submitLabel

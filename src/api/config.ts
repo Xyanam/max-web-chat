@@ -15,13 +15,13 @@ export function normalizeApiUrl(apiUrl: string): string {
 
 export function validateApiUrl(apiUrl: string): string | null {
   const value = normalizeApiUrl(apiUrl)
-  if (!value) return 'Enter the API URL from the GREEN-API console.'
+  if (!value) return 'Укажите адрес API из консоли GREEN-API.'
   try {
     const url = new URL(value)
-    if (url.protocol !== 'https:') return 'API URL must start with https://'
-    if (url.search || url.hash) return 'API URL must not contain query parameters.'
+    if (url.protocol !== 'https:') return 'Адрес API должен начинаться с https://'
+    if (url.search || url.hash) return 'Адрес API не должен содержать параметры запроса.'
   } catch {
-    return 'API URL is not a valid URL.'
+    return 'Некорректный адрес API.'
   }
   return null
 }
