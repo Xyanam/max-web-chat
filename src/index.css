@@ -301,6 +301,11 @@ code {
   .phone-input {
     flex-direction: column;
   }
+
+  /* flex: 1 sizes the width in a row; stacked, it would override height: 44px. */
+  .phone-input input {
+    flex: none;
+  }
 }
 
 .checkbox {
