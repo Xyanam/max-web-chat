@@ -176,7 +176,7 @@ src/
 - The app never logs credentials or notification payloads. Error messages shown to the user never
   include the request URL.
 - Chat history (texts, names, phone numbers) is cached in `localStorage` per `idInstance`, so it
-  survives reloads. The ID of the open chat is stored the same way, so a reload reopens it. Disconnecting forgets the credentials but keeps the history. To remove it, clear
+  survives reloads. Disconnecting forgets the credentials but keeps the history. To remove it, clear
   the site data in the browser.
 
 ## Known limitations
@@ -206,7 +206,7 @@ src/
 ## Checks performed
 
 - `npm run typecheck`, `npm run lint` (oxlint, 0 warnings), `npm run build`: pass.
-- `npm test`: 67 unit tests pass, covering:
+- `npm test`: 65 unit tests pass, covering:
   - phone: RU/BY normalization; country detection from pasted text; empty, incomplete and invalid
     numbers; the bracketed format; no `@c.us`
   - API client: friendly Russian error messages instead of raw API text; exact URLs, methods, headers, and bodies for every method; `null` and empty queue;

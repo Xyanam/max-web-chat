@@ -3,7 +3,6 @@ import { emptyChatState, type ChatState } from '../state/chatReducer'
 
 const CREDENTIALS_KEY = 'max-web-chat:credentials'
 const chatKey = (idInstance: string) => `max-web-chat:chats:${idInstance}`
-const activeChatKey = (idInstance: string) => `max-web-chat:active-chat:${idInstance}`
 
 function safeGet(storage: Storage, key: string): string | null {
   try {
@@ -91,14 +90,4 @@ export function loadChatState(idInstance: string): ChatState {
 
 export function saveChatState(idInstance: string, state: ChatState) {
   safeSet(localStorage, chatKey(idInstance), JSON.stringify(state))
-}
-
-/** The chat that was open, so a page reload returns to it. */
-export function loadActiveChatId(idInstance: string): string | null {
-  return safeGet(localStorage, activeChatKey(idInstance))
-}
-
-export function saveActiveChatId(idInstance: string, chatId: string | null) {
-  if (chatId) safeSet(localStorage, activeChatKey(idInstance), chatId)
-  else safeRemove(localStorage, activeChatKey(idInstance))
 }

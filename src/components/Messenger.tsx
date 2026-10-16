@@ -7,7 +7,6 @@ import { useChatStore } from '../hooks/useChatStore'
 import { lastMessage, sortedChats } from '../state/chatReducer'
 import { formatPhone } from '../lib/phone'
 import { localId } from '../lib/id'
-import { loadActiveChatId, saveActiveChatId } from '../lib/storage'
 import { instanceStateHint, instanceStateLabel } from '../lib/instanceState'
 import { ChatView } from './ChatView'
 import { EmptyState } from './EmptyState'
@@ -38,16 +37,7 @@ export function Messenger({
 }: MessengerProps) {
   const client = useMemo(() => new GreenApiClient(credentials), [credentials])
   const { state, dispatch, getState } = useChatStore(credentials.idInstance)
-  // Restore the chat that was open before a reload, if it still exists.
-  const [activeChatId, setActiveChatId] = useState<string | null>(() => {
-    const saved = loadActiveChatId(credentials.idInstance)
-    return saved && state.chats[saved] ? saved : null
-  })
-
-  useEffect(() => {
-    saveActiveChatId(credentials.idInstance, activeChatId)
-    if (activeChatId) dispatch({ type: 'markRead', chatId: activeChatId })
-  }, [credentials.idInstance, activeChatId, dispatch])
+  const [activeChatId, setActiveChatId] = useState<string | null>(null)
   const [dialog, setDialog] = useState<'newChat' | 'settings' | null>(null)
   const [instanceState, setInstanceState] = useState<InstanceState | null>(initialInstanceState)
   const [stateError, setStateError] = useState<string | null>(null)
