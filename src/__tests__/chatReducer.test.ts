@@ -104,3 +104,15 @@ describe('mergeStatus', () => {
     expect(mergeStatus('delivered', 'failed')).toBe('delivered')
   })
 })
+
+describe('chat title placeholders', () => {
+  it('treats a phone title in the old format as a placeholder too', () => {
+    let s = chatReducer(emptyChatState, {
+      type: 'openChat',
+      chatId: '100',
+      meta: { title: '+7 999 123-45-67', phone: '79991234567' },
+    })
+    s = chatReducer(s, { type: 'addMessage', message: msg({ id: 'z' }), meta: { title: 'Ivan' } })
+    expect(s.chats['100'].title).toBe('Ivan')
+  })
+})

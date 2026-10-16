@@ -24,7 +24,7 @@ export function Modal({ title, onClose, children }: ModalProps) {
       if (e.key !== 'Tab' || !dialogRef.current) return
       // Keep keyboard focus inside the dialog.
       const focusable = dialogRef.current.querySelectorAll<HTMLElement>(
-        'button:not([disabled]), input:not([disabled]), textarea:not([disabled]), a[href]',
+        'button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), a[href]',
       )
       if (!focusable.length) return
       const firstEl = focusable[0]

@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
-import { normalizePhone } from '../lib/phone'
+import { validatePhone, type PhoneCountry } from '../lib/phone'
 import { Modal } from './Modal'
+import { PhoneInput } from './PhoneInput'
 
 interface NewChatDialogProps {
   onClose: () => void
@@ -9,14 +10,15 @@ interface NewChatDialogProps {
 }
 
 export function NewChatDialog({ onClose, onCreate }: NewChatDialogProps) {
-  const [phone, setPhone] = useState('')
+  const [country, setCountry] = useState<PhoneCountry>('RU')
+  const [national, setNational] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     if (busy) return
-    const result = normalizePhone(phone)
+    const result = validatePhone(country, national)
     if (!result.ok) {
       setError(result.error)
       return
@@ -36,19 +38,17 @@ export function NewChatDialog({ onClose, onCreate }: NewChatDialogProps) {
       <form onSubmit={handleSubmit} noValidate>
         <div className="field">
           <label htmlFor="new-chat-phone">Номер телефона получателя</label>
-          <input
+          <PhoneInput
             id="new-chat-phone"
-            type="tel"
-            inputMode="tel"
-            autoComplete="tel"
-            placeholder="+7 999 123-45-67"
-            value={phone}
-            onChange={(e) => {
-              setPhone(e.target.value)
+            country={country}
+            national={national}
+            onChange={(nextCountry, nextNational) => {
+              setCountry(nextCountry)
+              setNational(nextNational)
               if (error) setError(null)
             }}
-            aria-invalid={Boolean(error)}
-            aria-describedby="new-chat-hint"
+            invalid={Boolean(error)}
+            describedBy="new-chat-hint"
             disabled={busy}
           />
           {error ? (

@@ -1,5 +1,4 @@
 import type { Chat, ChatMessage, MessageStatus } from '../types'
-import { formatPhone } from '../lib/phone'
 
 export interface ChatState {
   chats: Record<string, Chat>
@@ -42,7 +41,8 @@ function upsertChat(chats: Record<string, Chat>, chatId: string, meta?: ChatMeta
   if (existing) {
     // Replace placeholder titles (raw chatId or phone number) with a real name once known.
     const isPlaceholder =
-      existing.title === existing.chatId || (existing.phone !== undefined && existing.title === formatPhone(existing.phone))
+      existing.title === existing.chatId ||
+      (existing.phone !== undefined && existing.title.replace(/\D/g, '') === existing.phone)
     const title = isPlaceholder && meta?.title ? meta.title : existing.title
     const phone = existing.phone ?? meta?.phone
     if (title === existing.title && phone === existing.phone) return chats
