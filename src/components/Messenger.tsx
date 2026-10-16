@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { ChatMessage, Credentials, InstanceState } from '../types'
 import { GreenApiClient, GreenApiError, isAbortError } from '../api/greenApi'
+import { parseNotification } from '../api/notifications'
+import { startNotificationPoller, type PollerStatus } from '../api/notificationPoller'
 import { useChatStore } from '../hooks/useChatStore'
 import { lastMessage, sortedChats } from '../state/chatReducer'
 import { formatPhone } from '../lib/phone'
@@ -41,16 +43,59 @@ export function Messenger({
   onDisconnect,
 }: MessengerProps) {
   const client = useMemo(() => new GreenApiClient(credentials), [credentials])
-  const [state, dispatch] = useChatStore(credentials.idInstance)
+  const { state, dispatch, getState } = useChatStore(credentials.idInstance)
   const [activeChatId, setActiveChatId] = useState<string | null>(null)
   const [dialog, setDialog] = useState<'newChat' | 'settings' | null>(null)
   const [instanceState, setInstanceState] = useState<InstanceState | null>(initialInstanceState)
   const [stateError, setStateError] = useState<string | null>(null)
+  const [pollStatus, setPollStatus] = useState<PollerStatus | null>(null)
 
-  const stateRef = useRef(state)
+  const activeChatIdRef = useRef(activeChatId)
   useEffect(() => {
-    stateRef.current = state
+    activeChatIdRef.current = activeChatId
   })
+
+  // Receive incoming messages and delivery statuses via the HTTP API queue.
+  // The poller is stopped (and its in-flight request aborted) on unmount, i.e.
+  // when the user disconnects or replaces credentials.
+  useEffect(() => {
+    const handleNotification = (body: unknown) => {
+      const n = parseNotification(body)
+      if (n.type === 'message') {
+        const isActive = activeChatIdRef.current === n.chatId && document.visibilityState === 'visible'
+        dispatch({
+          type: 'addMessage',
+          isActive,
+          meta: { title: n.chatTitle, phone: n.phone },
+          message: {
+            id: n.idMessage,
+            idMessage: n.idMessage,
+            chatId: n.chatId,
+            direction: n.direction,
+            kind: n.kind,
+            text: n.text,
+            messageType: n.kind === 'unsupported' ? n.messageType : undefined,
+            timestamp: n.timestamp,
+            status: n.direction === 'outgoing' ? 'sent' : undefined,
+          },
+        })
+      } else if (n.type === 'status') {
+        dispatch({ type: 'applyStatus', chatId: n.chatId, idMessage: n.idMessage, status: n.status, error: n.description })
+      }
+    }
+    return startNotificationPoller({ client, onNotification: handleNotification, onStatus: setPollStatus })
+  }, [client, dispatch])
+
+  // Clear the unread counter when the user returns to the tab with an open chat.
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState === 'visible' && activeChatIdRef.current) {
+        dispatch({ type: 'markRead', chatId: activeChatIdRef.current })
+      }
+    }
+    document.addEventListener('visibilitychange', onVisible)
+    return () => document.removeEventListener('visibilitychange', onVisible)
+  }, [dispatch])
 
   // Periodically re-check the instance state so the UI reflects authorization changes.
   useEffect(() => {
@@ -71,8 +116,14 @@ export function Messenger({
     }
   }, [client, initialInstanceState])
 
-  const connectionStatus: ConnectionStatus = stateError ? 'error' : instanceState ? 'online' : 'connecting'
-  const connectionMessage = stateError ?? (instanceState ? `Instance ${credentials.idInstance} · ${instanceState}` : undefined)
+  const pollError =
+    pollStatus?.state === 'error'
+      ? `Receiving failed: ${errorMessage(pollStatus.error, 'unknown error')} Retrying in ${Math.round(pollStatus.retryInMs / 1000)} s.`
+      : null
+  const connectionStatus: ConnectionStatus =
+    stateError || pollError ? 'error' : instanceState && pollStatus?.state === 'ok' ? 'online' : 'connecting'
+  const connectionMessage =
+    pollError ?? stateError ?? (instanceState ? `Instance ${credentials.idInstance} · ${instanceState}` : undefined)
 
   const chats = useMemo(() => sortedChats(state), [state])
   const lastMessages = useMemo(
@@ -135,7 +186,7 @@ export function Messenger({
   }
 
   const handleRetry = (message: ChatMessage) => {
-    const current = stateRef.current.messages[message.chatId]?.find((m) => m.id === message.id)
+    const current = getState().messages[message.chatId]?.find((m) => m.id === message.id)
     if (current?.status !== 'failed') return
     void sendText(message.chatId, message.text, current)
   }

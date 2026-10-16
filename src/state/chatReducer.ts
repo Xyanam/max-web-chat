@@ -1,4 +1,5 @@
 import type { Chat, ChatMessage, MessageStatus } from '../types'
+import { formatPhone } from '../lib/phone'
 
 export interface ChatState {
   chats: Record<string, Chat>
@@ -39,7 +40,10 @@ export function mergeStatus(current: MessageStatus | undefined, next: MessageSta
 function upsertChat(chats: Record<string, Chat>, chatId: string, meta?: ChatMeta): Record<string, Chat> {
   const existing = chats[chatId]
   if (existing) {
-    const title = existing.title === existing.chatId && meta?.title ? meta.title : existing.title
+    // Replace placeholder titles (raw chatId or phone number) with a real name once known.
+    const isPlaceholder =
+      existing.title === existing.chatId || (existing.phone !== undefined && existing.title === formatPhone(existing.phone))
+    const title = isPlaceholder && meta?.title ? meta.title : existing.title
     const phone = existing.phone ?? meta?.phone
     if (title === existing.title && phone === existing.phone) return chats
     return { ...chats, [chatId]: { ...existing, title, phone } }
@@ -92,6 +96,23 @@ export function chatReducer(state: ChatState, action: ChatAction): ChatState {
       )
       if (duplicate) return state
 
+      // outgoingAPIMessageReceived can arrive before the SendMessage response.
+      // Attach its idMessage to the matching pending message instead of adding a copy.
+      if (message.direction === 'outgoing' && message.idMessage) {
+        const pending = list.find(
+          (m) => m.direction === 'outgoing' && m.status === 'sending' && !m.idMessage && m.text === message.text,
+        )
+        if (pending) {
+          return {
+            ...state,
+            messages: {
+              ...state.messages,
+              [message.chatId]: list.map((m) => (m === pending ? { ...m, idMessage: message.idMessage } : m)),
+            },
+          }
+        }
+      }
+
       let chats = upsertChat(state.chats, message.chatId, action.meta)
       if (message.direction === 'incoming' && !action.isActive) {
         const chat = chats[message.chatId]
@@ -110,6 +131,10 @@ export function chatReducer(state: ChatState, action: ChatAction): ChatState {
       if (!target) return state
 
       let updated: ChatMessage = { ...target, ...action.patch }
+      // A delivery status notification may already have advanced the message past "sent".
+      if (action.patch.status === 'sent' && target.status) {
+        updated.status = mergeStatus(target.status === 'failed' ? 'sending' : target.status, 'sent')
+      }
       let rest = list
       // A notification for this idMessage may have arrived before the SendMessage
       // response. Merge it into the local message instead of showing it twice.
