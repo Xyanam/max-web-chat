@@ -4,6 +4,7 @@ import { GreenApiClient, GreenApiError, isAbortError } from '../api/greenApi'
 import { parseNotification } from '../api/notifications'
 import { startNotificationPoller, type PollerStatus } from '../api/notificationPoller'
 import { useChatStore } from '../hooks/useChatStore'
+import { useContactInfo } from '../hooks/useContactInfo'
 import { lastMessage, sortedChats } from '../state/chatReducer'
 import { formatPhone } from '../lib/phone'
 import { localId } from '../lib/id'
@@ -124,6 +125,12 @@ export function Messenger({
     [chats, state],
   )
   const activeChat = activeChatId ? state.chats[activeChatId] : undefined
+
+  useContactInfo(
+    client,
+    chats.map((c) => c.chatId),
+    (chatId, info) => dispatch({ type: 'updateContact', chatId, ...info }),
+  )
 
   const openChat = useCallback(
     (chatId: string) => {

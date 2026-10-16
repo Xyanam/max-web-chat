@@ -116,3 +116,35 @@ describe('chat title placeholders', () => {
     expect(s.chats['100'].title).toBe('Ivan')
   })
 })
+
+describe('updateContact', () => {
+  const opened = chatReducer(emptyChatState, {
+    type: 'openChat',
+    chatId: '100',
+    meta: { title: '+7 (999) 123-45-67', phone: '79991234567' },
+  })
+
+  it('sets the name and avatar from GetContactInfo', () => {
+    const s = chatReducer(opened, { type: 'updateContact', chatId: '100', name: 'Ваня', avatarUrl: 'https://a/1' })
+    expect(s.chats['100']).toMatchObject({ title: 'Ваня', avatarUrl: 'https://a/1', phone: '79991234567' })
+  })
+
+  it('keeps the current title when the name is empty and clears a removed avatar', () => {
+    let s = chatReducer(opened, { type: 'updateContact', chatId: '100', name: '', avatarUrl: 'https://a/1' })
+    s = chatReducer(s, { type: 'updateContact', chatId: '100', name: '', avatarUrl: '' })
+    expect(s.chats['100'].title).toBe('+7 (999) 123-45-67')
+    expect(s.chats['100'].avatarUrl).toBeUndefined()
+  })
+
+  it('fills in a missing phone number', () => {
+    let s = add(emptyChatState, msg({ chatId: '200' }))
+    s = chatReducer(s, { type: 'updateContact', chatId: '200', name: 'Ольга', avatarUrl: '', phone: '375291234567' })
+    expect(s.chats['200'].phone).toBe('375291234567')
+  })
+
+  it('returns the same state when nothing changes or the chat is unknown', () => {
+    const s = chatReducer(opened, { type: 'updateContact', chatId: '100', name: '', avatarUrl: '' })
+    expect(s).toBe(opened)
+    expect(chatReducer(opened, { type: 'updateContact', chatId: 'x', name: 'a', avatarUrl: '' })).toBe(opened)
+  })
+})

@@ -103,6 +103,21 @@ That call returns the recipient's MAX `chatId` (e.g. `"10000000"`), and the app 
 for sending. Per the MAX API docs, only Russian (+7) and Belarusian (+375) numbers are accepted. If
 the number has no MAX account, the app tells you.
 
+### Contact name and avatar
+
+For each chat, the app calls
+[GetContactInfo](https://green-api.com/v3/docs/api/service/GetContactInfo/)
+(`POST {apiUrl}/waInstance{id}/getContactInfo/{token}` with `{"chatId": "..."}`). The name and avatar it
+returns appear in the chat list and the chat header, next to the phone number.
+
+- The name comes from your address book (`contactName`). If that's empty, the MAX profile name (`name`)
+  is used.
+- Initials are shown when there's no avatar, the contact hides it in their privacy settings, or the
+  image fails to load.
+- Requests run one at a time, 250 ms apart (the documented limit is 10 per second per instance). Each
+  chat is requested once per session. Avatar links are refreshed on every connect, because the docs
+  don't say how long they stay valid. If a request fails, the chat keeps its current name and avatar.
+
 ### 3. Exchange messages
 
 - Type a message and press **Enter** or the send button. **Shift+Enter** inserts a new line. Empty or
@@ -197,6 +212,9 @@ src/
   (about 50 KB gzipped).
 - Browser autofill of the phone field is disabled, because autofilled values bypass the mask's paste
   handling.
+- Contact name and avatar loading was checked only with a stubbed `fetch`. Real `i.oneme.ru` avatar
+  links were never loaded. The app sends no referrer for them, but whether they load from a browser
+  is unverified.
 - Text only: no media, groups, reactions, calls, etc., as the assignment requires.
 - A delivery status that arrives before the `SendMessage` response (practically impossible, because
   delivery happens later) would be ignored.
@@ -206,7 +224,7 @@ src/
 ## Checks performed
 
 - `npm run typecheck`, `npm run lint` (oxlint, 0 warnings), `npm run build`: pass.
-- `npm test`: 65 unit tests pass, covering:
+- `npm test`: 71 unit tests pass, covering:
   - phone: RU/BY normalization; country detection from pasted text; empty, incomplete and invalid
     numbers; the bracketed format; no `@c.us`
   - API client: friendly Russian error messages instead of raw API text; exact URLs, methods, headers, and bodies for every method; `null` and empty queue;
@@ -242,3 +260,11 @@ src/
   - `checkAccount` received exactly `{"phoneNumber":79120000000}` / `{"phoneNumber":375291234567}`
   - layout at 375 px: the country selector stacks above the field
   - Pastes were simulated with DOM `paste` events because the test browser blocks clipboard access.
+- Contact name and avatar, with a stubbed `fetch`:
+  - the address-book name replaced the phone placeholder
+  - a failed request kept the existing name and avatar
+  - a broken image link fell back to initials
+  - a valid image appeared in both the list and the header
+  - requests were about 250 ms apart
+  - a newly created chat triggered a single extra request, and its header showed the name with the
+    phone number

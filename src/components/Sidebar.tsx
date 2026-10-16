@@ -107,7 +107,7 @@ export function Sidebar({
                 onClick={() => onSelectChat(chat.chatId)}
                 aria-current={active ? 'true' : undefined}
               >
-                <Avatar title={chat.title} seed={chat.chatId} />
+                <Avatar title={chat.title} seed={chat.chatId} src={chat.avatarUrl} />
                 <span className="chat-item-body">
                   <span className="chat-item-top">
                     <span className="chat-item-title">{chat.title}</span>

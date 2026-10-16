@@ -39,6 +39,8 @@ export interface Chat {
   title: string
   /** Normalized phone number (digits only), if known. */
   phone?: string
+  /** Avatar link from GetContactInfo; initials are shown when missing or broken. */
+  avatarUrl?: string
   unread: number
   createdAt: number
 }

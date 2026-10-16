@@ -19,6 +19,7 @@ export type ChatAction =
   | { type: 'addMessage'; message: ChatMessage; meta?: ChatMeta; isActive?: boolean }
   | { type: 'updateMessage'; chatId: string; id: string; patch: Partial<ChatMessage> }
   | { type: 'applyStatus'; chatId: string; idMessage: string; status: MessageStatus; error?: string }
+  | { type: 'updateContact'; chatId: string; name: string; avatarUrl: string; phone?: string }
 
 const statusRank: Record<MessageStatus, number> = {
   failed: -1,
@@ -164,7 +165,22 @@ export function chatReducer(state: ChatState, action: ChatAction): ChatState {
       })
       return changed ? { ...state, messages: { ...state.messages, [action.chatId]: next } } : state
     }
+
+    case 'updateContact': {
+      const chat = state.chats[action.chatId]
+      if (!chat) return state
+      const updated = applyContact(chat, action)
+      return updated === chat ? state : { ...state, chats: { ...state.chats, [action.chatId]: updated } }
+    }
   }
+}
+
+function applyContact(chat: Chat, action: Extract<ChatAction, { type: 'updateContact' }>): Chat {
+  const title = action.name || chat.title
+  const avatarUrl = action.avatarUrl || undefined
+  const phone = chat.phone ?? action.phone
+  if (title === chat.title && avatarUrl === chat.avatarUrl && phone === chat.phone) return chat
+  return { ...chat, title, avatarUrl, phone }
 }
 
 export function lastMessage(state: ChatState, chatId: string): ChatMessage | undefined {

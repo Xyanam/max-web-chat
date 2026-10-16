@@ -35,6 +35,15 @@ export interface CheckAccountResponse {
   chatId: string
 }
 
+export interface ContactInfo {
+  /** Address-book name if saved, otherwise the MAX profile name. Empty if unknown. */
+  name: string
+  /** HTTPS link to the avatar. Empty if not set or hidden by privacy settings. */
+  avatarUrl: string
+  /** Digits only; undefined when MAX hides the number. */
+  phone?: string
+}
+
 export interface ReceivedNotification {
   receiptId: number
   body: unknown
@@ -199,6 +208,22 @@ export class GreenApiClient {
       throw new GreenApiError('api', 'Не удалось проверить номер. Попробуйте позже.')
     }
     return { exist: res.exist === true, chatId: typeof res.chatId === 'string' ? res.chatId : '' }
+  }
+
+  /** POST getContactInfo — name and avatar of a one-to-one chat (not groups). */
+  async getContactInfo(chatId: string, signal?: AbortSignal): Promise<ContactInfo> {
+    const res = await this.request<{ name?: unknown; contactName?: unknown; avatar?: unknown; phoneNumber?: unknown }>(
+      'getContactInfo',
+      { method: 'POST', body: { chatId }, signal },
+    )
+    if (!res) throw new GreenApiError('api', 'GREEN-API вернул пустой ответ.')
+    const text = (v: unknown) => (typeof v === 'string' ? v.trim() : '')
+    const avatar = text(res.avatar)
+    return {
+      name: text(res.contactName) || text(res.name),
+      avatarUrl: avatar.startsWith('https://') ? avatar : '',
+      phone: typeof res.phoneNumber === 'number' && res.phoneNumber > 0 ? String(res.phoneNumber) : undefined,
+    }
   }
 
   /** POST sendMessage — text only, up to 4000 characters. */

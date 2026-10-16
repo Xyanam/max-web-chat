@@ -97,6 +97,39 @@ describe('GreenApiClient', () => {
     expect(err.message).not.toMatch(/Internal|\{/)
   })
 
+  it('calls getContactInfo with the chatId and prefers the address-book name', async () => {
+    const fetchFn = mockFetch(
+      200,
+      JSON.stringify({
+        avatar: 'https://i.oneme.ru/i?r=abc',
+        name: 'Ivan Petrov',
+        contactName: 'Ваня',
+        chatId: '10000000',
+        chatType: 'user',
+        lastSeen: 1754632014,
+        phoneNumber: 79876543210,
+      }),
+    )
+    const client = new GreenApiClient(creds, fetchFn)
+    await expect(client.getContactInfo('10000000')).resolves.toEqual({
+      name: 'Ваня',
+      avatarUrl: 'https://i.oneme.ru/i?r=abc',
+      phone: '79876543210',
+    })
+    const [url, init] = fetchFn.mock.calls[0]
+    expect(url).toBe('https://1234.api.green-api.com/v3/waInstance1234567890/getContactInfo/test-token')
+    expect(init).toMatchObject({ method: 'POST', headers: { 'Content-Type': 'application/json' } })
+    expect(JSON.parse(init!.body as string)).toEqual({ chatId: '10000000' })
+  })
+
+  it('falls back to the MAX profile name and drops hidden or non-https data', async () => {
+    const client = new GreenApiClient(
+      creds,
+      mockFetch(200, '{"avatar":"javascript:alert(1)","name":"Ivan","contactName":"","phoneNumber":0}'),
+    )
+    await expect(client.getContactInfo('10000000')).resolves.toEqual({ name: 'Ivan', avatarUrl: '', phone: undefined })
+  })
+
   it('maps suspended account 403', async () => {
     const client = new GreenApiClient(creds, mockFetch(403, 'Your account is suspended'))
     await expect(client.sendMessage('1', 'x')).rejects.toThrow(/временно ограничен/)

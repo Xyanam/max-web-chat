@@ -53,7 +53,7 @@ export function ChatView({ chat, messages, onBack, onSend, onRetry }: ChatViewPr
         <button type="button" className="icon-button chat-back" onClick={onBack} aria-label="Назад к чатам">
           <BackIcon width={22} height={22} />
         </button>
-        <Avatar title={chat.title} seed={chat.chatId} size={40} />
+        <Avatar title={chat.title} seed={chat.chatId} src={chat.avatarUrl} size={40} />
         <div className="chat-header-text">
           <h2>{chat.title}</h2>
           <p>{chat.title === subtitle ? 'MAX' : subtitle}</p>
