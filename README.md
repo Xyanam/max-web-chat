@@ -6,6 +6,8 @@ A minimal single-page web chat for the **MAX** messenger, built with React and t
 
 You can:
 
+The interface is in Russian.
+
 - connect a GREEN-API instance with `idInstance` / `apiTokenInstance`
 - start a chat by phone number
 - send text messages
@@ -16,7 +18,9 @@ You can:
 - React 19 + TypeScript
 - Vite 8 (dev server and build)
 - Vitest (unit tests), oxlint (linting)
-- Plain CSS with light/dark themes. No UI framework and no runtime dependencies besides React.
+- [react-imask](https://imask.js.org/) for the phone input mask and
+  [libphonenumber-js](https://gitlab.com/catamphetamine/libphonenumber-js) for phone number validation
+- Plain CSS with light/dark themes. No UI framework.
 
 ## Prerequisites
 
@@ -68,23 +72,32 @@ The instance must be in the `authorized` state. If it isn't, the app shows a ban
 ### 1. Connect
 
 1. Open the app and enter **idInstance** and **apiTokenInstance** from the console.
-2. **API URL** is filled in automatically as `https://{first 4 digits of idInstance}.api.green-api.com/v3`.
+2. **Адрес API (apiUrl)** is filled in automatically as `https://{first 4 digits of idInstance}.api.green-api.com/v3`.
    If the console shows a different `apiUrl` for your instance, paste that value instead.
-3. Optionally tick **Remember on this device**. See [Security](#security-considerations).
-4. Click **Connect**. The app checks the credentials with
+3. Optionally tick **Запомнить на этом устройстве** (remember on this device). See [Security](#security-considerations).
+4. Click **Подключиться** (connect). The app checks the credentials with
    [GetStateInstance](https://green-api.com/v3/docs/api/account/GetStateInstance/). Wrong credentials,
    network problems, and a non-authorized instance each produce a clear message.
 
-To change or replace credentials, click the gear icon in the sidebar. **Save and reconnect** applies
-new credentials. **Disconnect and forget credentials** returns to the connect screen.
+To change or replace credentials, click the gear icon in the sidebar. **Сохранить и переподключиться**
+applies new credentials. **Отключиться и забыть данные** returns to the connect screen.
 
 ### 2. Start a chat
 
-Click the pencil icon or **New chat**, then enter the recipient's phone number. All of these work:
-`+7 999 123-45-67`, `89991234567`, `9991234567`, or `+375 29 123-45-67`.
+Click the pencil icon or **Новый чат** (new chat), choose the country (**Россия (+7)** or
+**Беларусь (+375)**) and enter the recipient's number. The field is masked as `+7 (999) 123-45-67`
+or `+375 (29) 123-45-67`:
 
-MAX does not use WhatsApp-style `79991234567@c.us` identifiers. The phone number is normalized to the
-11–12 digit international format and sent to
+- Pasting a full number switches the country automatically. These all work: `+375 29 123-45-67`,
+  `375291234567`, `+7 (999) 123-45-67`, `79991234567`, `8 (999) 123-45-67`. Pasting a few digits
+  inserts them at the caret.
+- Digits can be inserted or removed in the middle with Backspace and Delete. The caret stays in place,
+  and typing into a complete number is ignored, so no digits are lost.
+- An empty number, an incomplete number (fewer than 10 digits after +7 or 9 after +375), and numbers
+  that `libphonenumber-js` reports as invalid for the selected country are rejected before any API call.
+
+MAX does not use WhatsApp-style `79991234567@c.us` identifiers. Formatting is stripped, and the number
+is normalized to the 11–12 digit international format and sent to
 [CheckAccount](https://green-api.com/v3/docs/api/service/CheckAccount/) (`{"phoneNumber": 79991234567}`).
 That call returns the recipient's MAX `chatId` (e.g. `"10000000"`), and the app uses this `chatId`
 for sending. Per the MAX API docs, only Russian (+7) and Belarusian (+375) numbers are accepted. If
@@ -99,7 +112,7 @@ the number has no MAX account, the app tells you.
   `POST {apiUrl}/waInstance{idInstance}/sendMessage/{apiTokenInstance}` with
   `Content-Type: application/json` and `{"chatId": "...", "message": "..."}`.
 - Message states: clock = sending, ✓ = accepted by GREEN-API, ✓✓ = delivered, blue ✓✓ = read,
-  red outline = failed (with the reason and a **Retry** link). A second send is blocked while a
+  red outline = failed (with the reason and a **Повторить** (retry) link). A second send is blocked while a
   request is in flight.
 - When the recipient replies in MAX, the reply appears in the matching chat. Messages from numbers
   without an open chat create a new chat in the sidebar with an unread badge.
@@ -157,7 +170,7 @@ src/
   The token is part of the request URL, as the API requires, so it is visible in the browser's
   network tab on this device.
 - By default, credentials are kept in `sessionStorage` and cleared when the tab closes. **Remember on
-  this device** moves them to `localStorage` until you click **Disconnect**. Any script running on the
+  this device** moves them to `localStorage` until you click **Отключиться и забыть данные** (disconnect). Any script running on the
   page origin can read either storage. That is acceptable for a local tool, but don't host this on a
   shared origin. In production, a backend proxy should hold the token.
 - The app never logs credentials or notification payloads. Error messages shown to the user never
@@ -180,6 +193,10 @@ src/
   the same instance, will split notifications between them.
 - History comes only from this browser's cache and from notifications. Earlier messages from the GREEN-API
   journals are not loaded. Queued notifications are kept by GREEN-API for 24 hours.
+- The phone libraries (`react-imask`, `libphonenumber-js`) add about 190 KB to the JS bundle
+  (about 50 KB gzipped).
+- Browser autofill of the phone field is disabled, because autofilled values bypass the mask's paste
+  handling.
 - Text only: no media, groups, reactions, calls, etc., as the assignment requires.
 - A delivery status that arrives before the `SendMessage` response (practically impossible, because
   delivery happens later) would be ignored.
@@ -189,9 +206,10 @@ src/
 ## Checks performed
 
 - `npm run typecheck`, `npm run lint` (oxlint, 0 warnings), `npm run build`: pass.
-- `npm test`: 49 unit tests pass, covering:
-  - phone normalization: RU/BY formats, rejections, no `@c.us`
-  - API client: exact URLs, methods, headers, and bodies for every method; `null` and empty queue;
+- `npm test`: 65 unit tests pass, covering:
+  - phone: RU/BY normalization; country detection from pasted text; empty, incomplete and invalid
+    numbers; the bracketed format; no `@c.us`
+  - API client: friendly Russian error messages instead of raw API text; exact URLs, methods, headers, and bodies for every method; `null` and empty queue;
     `receiveTimeout` clamping; 401/403/400-webhook/network error mapping without leaking the token
   - notification parser: incoming and outgoing text, `extendedTextMessage`, media as unsupported,
     groups ignored, status mapping
@@ -213,3 +231,14 @@ src/
   - network failure → backoff → recovery
   - disconnect stops polling and clears the stored credentials
   - no console output containing credentials
+- Second manual browser run, after the Russian localization and phone mask, also with a stubbed `fetch`:
+  - every screen, dialog, status, and error checked for leftover English text; chat message text
+    stays untranslated
+  - typing; Backspace and Delete in the middle of the number, with caret positions checked
+  - pasting full RU/BY numbers in several formats (country switches automatically, extra digits are
+    cut off) and pasting digits into the middle
+  - switching the country by hand
+  - empty, incomplete, and invalid numbers blocked before the API call
+  - `checkAccount` received exactly `{"phoneNumber":79120000000}` / `{"phoneNumber":375291234567}`
+  - layout at 375 px: the country selector stacks above the field
+  - Pastes were simulated with DOM `paste` events because the test browser blocks clipboard access.
