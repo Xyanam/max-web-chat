@@ -9,8 +9,10 @@ import { lastMessage, sortedChats } from '../state/chatReducer'
 import { formatPhone } from '../lib/phone'
 import { localId } from '../lib/id'
 import { instanceStateHint, instanceStateLabel } from '../lib/instanceState'
+import { enableNotificationsBody, missingNotifications, type RequiredNotification } from '../lib/notificationSettings'
 import { ChatView } from './ChatView'
 import { EmptyState } from './EmptyState'
+import { NotificationSettingsBanner } from './NotificationSettingsBanner'
 import { NewChatDialog } from './NewChatDialog'
 import { SettingsDialog } from './SettingsDialog'
 import { Sidebar, type ConnectionStatus } from './Sidebar'
@@ -90,6 +92,31 @@ export function Messenger({
     document.addEventListener('visibilitychange', onVisible)
     return () => document.removeEventListener('visibilitychange', onVisible)
   }, [dispatch])
+
+  // Notification types disabled on the instance never reach the queue, so warn about them.
+  const [missingSettings, setMissingSettings] = useState<RequiredNotification[]>([])
+  const [settingsSaved, setSettingsSaved] = useState(false)
+
+  useEffect(() => {
+    const controller = new AbortController()
+    client
+      .getSettings(controller.signal)
+      .then((settings) => setMissingSettings(missingNotifications(settings)))
+      .catch(() => {
+        // Not critical: the chat works without this check.
+      })
+    return () => controller.abort()
+  }, [client])
+
+  const enableNotifications = async () => {
+    try {
+      await client.setSettings(enableNotificationsBody(missingSettings))
+    } catch (err) {
+      throw new Error(errorMessage(err, 'Не удалось сохранить настройки.'))
+    }
+    setMissingSettings([])
+    setSettingsSaved(true)
+  }
 
   // Periodically re-check the instance state so the UI reflects authorization changes.
   useEffect(() => {
@@ -206,6 +233,14 @@ export function Messenger({
         onOpenSettings={() => setDialog('settings')}
       />
       <main className="main">
+        {missingSettings.length > 0 && (
+          <NotificationSettingsBanner missing={missingSettings} onEnable={enableNotifications} />
+        )}
+        {settingsSaved && (
+          <div className="banner banner-info" role="status">
+            Настройки сохранены. Инстанс перезапускается, уведомления начнут приходить в течение 5 минут.
+          </div>
+        )}
         {instanceState && instanceState !== 'authorized' && (
           <div className="banner" role="status">
             {instanceStateHint(instanceState)}

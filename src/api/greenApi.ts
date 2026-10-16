@@ -188,6 +188,19 @@ export class GreenApiClient {
     return res.stateInstance
   }
 
+  /** GET getSettings — instance settings, including which notification types are enabled. */
+  async getSettings(signal?: AbortSignal): Promise<Record<string, unknown>> {
+    const res = await this.request<Record<string, unknown>>('getSettings', { method: 'GET', signal })
+    if (!res) throw new GreenApiError('api', 'GREEN-API вернул пустой ответ.')
+    return res
+  }
+
+  /** POST setSettings — restarts the instance; changes apply within 5 minutes. */
+  async setSettings(settings: Record<string, string>, signal?: AbortSignal): Promise<void> {
+    const res = await this.request<{ saveSettings?: boolean }>('setSettings', { method: 'POST', body: settings, signal })
+    if (res?.saveSettings !== true) throw new GreenApiError('api', 'GREEN-API не сохранил настройки.')
+  }
+
   /**
    * POST checkAccount — resolves a phone number (11–12 digits, +7 / +375 only)
    * to the MAX chatId that must be used for sending.

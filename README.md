@@ -62,8 +62,17 @@ In the GREEN-API console, open the instance, click **Edit** (Изменить), 
 |---|---|---|
 | `webhookUrl` | **empty** | Notifications can't be fetched over HTTP API while a webhook URL is set. The app shows a dedicated error in this case. |
 | Incoming messages (`incomingWebhook`) | on | Needed to receive replies |
-| Outgoing message statuses (`outgoingWebhook`) | on (recommended) | Enables delivered/read/failed ticks |
-| Messages sent from the phone / API | optional | Mirrors messages sent from other MAX clients or other API clients |
+| Messages sent from the phone (`outgoingMessageWebhook`) | on | Shows messages you send from the MAX app (phone, web, desktop) |
+| Outgoing message statuses (`outgoingWebhook`) | on | Delivered/read/failed ticks, including for messages sent from the phone |
+
+GREEN-API creates instances with all notification types turned off. A disabled type never reaches the
+notification queue, so the chat can't show it, even though the GREEN-API console still lists those
+messages and their read status. After connecting, the app reads the settings with
+[GetSettings](https://green-api.com/v3/docs/api/account/GetSettings/). If any of the three are off,
+it shows a banner with an **Включить** (enable) button. After you confirm, that button calls
+[SetSettings](https://green-api.com/v3/docs/api/account/SetSettings/) with only the missing flags. The
+instance restarts, and the change takes effect within 5 minutes. The app never changes `webhookUrl`.
+Messages sent while a type was off are not delivered later.
 
 The instance must be in the `authorized` state. If it isn't, the app shows a banner.
 
@@ -224,7 +233,7 @@ src/
 ## Checks performed
 
 - `npm run typecheck`, `npm run lint` (oxlint, 0 warnings), `npm run build`: pass.
-- `npm test`: 71 unit tests pass, covering:
+- `npm test`: 77 unit tests pass, covering:
   - phone: RU/BY normalization; country detection from pasted text; empty, incomplete and invalid
     numbers; the bracketed format; no `@c.us`
   - API client: friendly Russian error messages instead of raw API text; exact URLs, methods, headers, and bodies for every method; `null` and empty queue;
@@ -268,3 +277,8 @@ src/
   - requests were about 250 ms apart
   - a newly created chat triggered a single extra request, and its header showed the name with the
     phone number
+- Instance notification settings, with a stubbed `fetch`:
+  - with `outgoingMessageWebhook` and `outgoingWebhook` set to `no`, the banner named exactly those two
+  - **Включить** → confirm sent `{"outgoingMessageWebhook":"yes","outgoingWebhook":"yes"}` to SetSettings
+  - an `outgoingMessageReceived` from the phone then showed up as an outgoing message, and an
+    `outgoingMessageStatus` `read` notification turned it to «Прочитано»

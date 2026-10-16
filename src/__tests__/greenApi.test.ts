@@ -130,6 +130,27 @@ describe('GreenApiClient', () => {
     await expect(client.getContactInfo('10000000')).resolves.toEqual({ name: 'Ivan', avatarUrl: '', phone: undefined })
   })
 
+  it('reads instance settings with GET getSettings', async () => {
+    const fetchFn = mockFetch(200, '{"incomingWebhook":"yes","outgoingWebhook":"no"}')
+    const client = new GreenApiClient(creds, fetchFn)
+    await expect(client.getSettings()).resolves.toEqual({ incomingWebhook: 'yes', outgoingWebhook: 'no' })
+    expect(fetchFn.mock.calls[0][0]).toBe('https://1234.api.green-api.com/v3/waInstance1234567890/getSettings/test-token')
+    expect(fetchFn.mock.calls[0][1]).toMatchObject({ method: 'GET' })
+  })
+
+  it('saves settings with POST setSettings and checks saveSettings', async () => {
+    const fetchFn = mockFetch(200, '{"saveSettings":true}')
+    const client = new GreenApiClient(creds, fetchFn)
+    await client.setSettings({ outgoingWebhook: 'yes' })
+    const [url, init] = fetchFn.mock.calls[0]
+    expect(url).toBe('https://1234.api.green-api.com/v3/waInstance1234567890/setSettings/test-token')
+    expect(init).toMatchObject({ method: 'POST', headers: { 'Content-Type': 'application/json' } })
+    expect(JSON.parse(init!.body as string)).toEqual({ outgoingWebhook: 'yes' })
+
+    const failing = new GreenApiClient(creds, mockFetch(200, '{"saveSettings":false}'))
+    await expect(failing.setSettings({ outgoingWebhook: 'yes' })).rejects.toThrow('GREEN-API не сохранил настройки.')
+  })
+
   it('maps suspended account 403', async () => {
     const client = new GreenApiClient(creds, mockFetch(403, 'Your account is suspended'))
     await expect(client.sendMessage('1', 'x')).rejects.toThrow(/временно ограничен/)
