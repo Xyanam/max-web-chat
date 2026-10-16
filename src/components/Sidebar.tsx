@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import type { Chat, ChatMessage } from '../types'
 import { formatListTime } from '../lib/format'
 import { formatPhone } from '../lib/phone'
@@ -17,6 +17,8 @@ interface SidebarProps {
   onSelectChat: (chatId: string) => void
   onNewChat: () => void
   onOpenSettings: () => void
+  /** Warnings shown above the list on mobile, where the conversation pane is hidden. */
+  notices?: ReactNode
 }
 
 function preview(message: ChatMessage | undefined): string {
@@ -42,6 +44,7 @@ export function Sidebar({
   onSelectChat,
   onNewChat,
   onOpenSettings,
+  notices,
 }: SidebarProps) {
   const [query, setQuery] = useState('')
   const q = query.trim().toLowerCase()
@@ -69,6 +72,8 @@ export function Sidebar({
           </button>
         </div>
       </header>
+
+      {notices && <div className="sidebar-notices">{notices}</div>}
 
       <div className="sidebar-search">
         <SearchIcon width={18} height={18} />

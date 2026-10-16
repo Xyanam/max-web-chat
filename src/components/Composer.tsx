@@ -26,7 +26,8 @@ export function Composer({ onSend, disabled, autoFocusKey }: ComposerProps) {
     const el = textareaRef.current
     if (!el) return
     el.style.height = 'auto'
-    el.style.height = `${el.scrollHeight}px`
+    // scrollHeight excludes borders, but the box is border-box: add them back or a scrollbar appears.
+    el.style.height = `${el.scrollHeight + el.offsetHeight - el.clientHeight}px`
     // Show a scrollbar only once the CSS max-height is reached.
     el.style.overflowY = el.scrollHeight > el.clientHeight ? 'auto' : 'hidden'
   }, [text])

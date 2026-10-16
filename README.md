@@ -282,3 +282,10 @@ src/
   - **Включить** → confirm sent `{"outgoingMessageWebhook":"yes","outgoingWebhook":"yes"}` to SetSettings
   - an `outgoingMessageReceived` from the phone then showed up as an outgoing message, and an
     `outgoingMessageStatus` `read` notification turned it to «Прочитано»
+- Layout pass at 1440×860, 1280×520, 375×812, and 320×568:
+  - messages sit 20 px from the edges
+  - only newly sent or received messages animate in (220 ms; turned off with reduced motion)
+  - long conversations scroll inside the message list, with the header and composer fixed
+  - warnings sit under the chat header on desktop and above the chat list on mobile
+  - inputs use 16 px text on mobile, so iOS Safari doesn't zoom in on focus
+  - no horizontal scrolling at 320 px

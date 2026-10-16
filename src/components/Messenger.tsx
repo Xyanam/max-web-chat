@@ -219,6 +219,25 @@ export function Messenger({
   }
 
 
+  const hasNotices = missingSettings.length > 0 || settingsSaved || (instanceState !== null && instanceState !== 'authorized')
+  const notices = hasNotices ? (
+    <div className="notices">
+      {missingSettings.length > 0 && (
+        <NotificationSettingsBanner missing={missingSettings} onEnable={enableNotifications} />
+      )}
+      {settingsSaved && (
+        <div className="banner banner-info" role="status">
+          Настройки сохранены. Инстанс перезапускается, уведомления начнут приходить в течение 5 минут.
+        </div>
+      )}
+      {instanceState && instanceState !== 'authorized' && (
+        <div className="banner" role="status">
+          {instanceStateHint(instanceState)}
+        </div>
+      )}
+    </div>
+  ) : null
+
   return (
     <div className={`layout${activeChat ? ' has-active-chat' : ''}`}>
       <Sidebar
@@ -231,31 +250,24 @@ export function Messenger({
         onSelectChat={openChat}
         onNewChat={() => setDialog('newChat')}
         onOpenSettings={() => setDialog('settings')}
+        notices={notices}
       />
       <main className="main">
-        {missingSettings.length > 0 && (
-          <NotificationSettingsBanner missing={missingSettings} onEnable={enableNotifications} />
-        )}
-        {settingsSaved && (
-          <div className="banner banner-info" role="status">
-            Настройки сохранены. Инстанс перезапускается, уведомления начнут приходить в течение 5 минут.
-          </div>
-        )}
-        {instanceState && instanceState !== 'authorized' && (
-          <div className="banner" role="status">
-            {instanceStateHint(instanceState)}
-          </div>
-        )}
         {activeChat ? (
           <ChatView
+            key={activeChat.chatId}
             chat={activeChat}
             messages={state.messages[activeChat.chatId] ?? []}
             onBack={() => setActiveChatId(null)}
             onSend={handleSend}
             onRetry={handleRetry}
+            notices={notices}
           />
         ) : (
-          <EmptyState onNewChat={() => setDialog('newChat')} />
+          <>
+            {notices}
+            <EmptyState onNewChat={() => setDialog('newChat')} />
+          </>
         )}
       </main>
 

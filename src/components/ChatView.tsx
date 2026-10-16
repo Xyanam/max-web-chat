@@ -1,4 +1,4 @@
-import { Fragment, useLayoutEffect, useRef } from 'react'
+import { Fragment, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import type { Chat, ChatMessage } from '../types'
 import { formatDaySeparator, isSameDay } from '../lib/format'
 import { formatPhone } from '../lib/phone'
@@ -13,15 +13,19 @@ interface ChatViewProps {
   onBack: () => void
   onSend: (text: string) => Promise<void>
   onRetry: (message: ChatMessage) => void
+  notices?: ReactNode
 }
 
 const NEAR_BOTTOM_PX = 120
 
-export function ChatView({ chat, messages, onBack, onSend, onRetry }: ChatViewProps) {
+export function ChatView({ chat, messages, onBack, onSend, onRetry, notices }: ChatViewProps) {
   const scrollRef = useRef<HTMLDivElement>(null)
   const nearBottomRef = useRef(true)
   const prevChatRef = useRef<string | null>(null)
   const prevCountRef = useRef(0)
+  // Keyed by chat in Messenger, so this is the history at the moment the chat was opened.
+  // Only messages added afterwards get the entrance animation.
+  const [initialIds] = useState(() => new Set(messages.map((m) => m.id)))
 
   useLayoutEffect(() => {
     const el = scrollRef.current
@@ -60,6 +64,8 @@ export function ChatView({ chat, messages, onBack, onSend, onRetry }: ChatViewPr
         </div>
       </header>
 
+      {notices}
+
       <div className="messages" ref={scrollRef} onScroll={handleScroll} role="log" aria-live="polite">
         {messages.length === 0 ? (
           <div className="messages-empty">
@@ -77,7 +83,7 @@ export function ChatView({ chat, messages, onBack, onSend, onRetry }: ChatViewPr
                     <span>{formatDaySeparator(m.timestamp)}</span>
                   </div>
                 )}
-                <MessageBubble message={m} onRetry={onRetry} />
+                <MessageBubble message={m} onRetry={onRetry} animate={!initialIds.has(m.id)} />
               </Fragment>
             )
           })

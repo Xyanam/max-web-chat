@@ -33,14 +33,15 @@ function StatusIcon({ message }: { message: ChatMessage }) {
 interface MessageBubbleProps {
   message: ChatMessage
   onRetry?: (message: ChatMessage) => void
+  animate?: boolean
 }
 
-export function MessageBubble({ message, onRetry }: MessageBubbleProps) {
+export function MessageBubble({ message, onRetry, animate }: MessageBubbleProps) {
   const outgoing = message.direction === 'outgoing'
   const failed = message.status === 'failed'
 
   return (
-    <div className={`msg-row ${outgoing ? 'is-outgoing' : 'is-incoming'}`}>
+    <div className={`msg-row ${outgoing ? 'is-outgoing' : 'is-incoming'}${animate ? ' is-new' : ''}`}>
       <div className={`msg-bubble${failed ? ' is-failed' : ''}${message.kind === 'unsupported' ? ' is-unsupported' : ''}`}>
         {message.kind === 'unsupported' ? (
           <p className="msg-text msg-unsupported">
